@@ -1,6 +1,12 @@
+/*
 body {
     width: 1920px;
     height: 1080px;
     background-image: url("/assets/sky.png");
-    background-size: 100vw 100vh; /* stretches image */
+    background-size: 100vw 100vh; stretches image 
+}
+*/
+
+body {
+    margin: 0;
 }
