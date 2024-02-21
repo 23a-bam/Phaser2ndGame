@@ -6,7 +6,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 300 },
+            gravity: { y: 400 },
             debug: false
         }
     },
@@ -35,18 +35,50 @@ function create() {
 
     platforms = this.physics.add.staticGroup();
 
-    createGround(0, 984, 50, 2, new Array(4, 5, 6, 10, 11, 12));
-    createGround(4, 800, 3, 2, new Array());
+    createGround(0, 1034, 50, 1, new Array(4, 5, 6, 10, 11, 12));
+    createGround(4, 920, 3, 1, new Array());
+
+    player = this.physics.add.sprite(50, 700, 'hero');
+    player.setScale(3);
+    player.setCollideWorldBounds(true);
+    this.physics.add.collider(player, platforms);
+
+    // реєструє стрілки вліво, вправо, вгору, вниз
+    cursors = this.input.keyboard.createCursorKeys();
+
 }
 
 function createGround(start, y, count, scale, holes) {
     for (let i = start; i < start + count; i++) {
         if (holes === null || !holes.includes(i)) { // якщо не задана діра
-            platforms.create(i * 48 * scale, y, 'tile').setOrigin(0, 0).setScale(scale);
+            platforms.create(i * 48 * scale, y, 'tile').setScale(scale);
         }
     }
 }
 
 function update() {
+    if (cursors.left.isDown) // якщо натиснута стрілка вліво
+    {
+        player.setVelocityX(-160); // йти вліво
+        player.anims.play('left', true);
+        player.flipX = true; // повернути вліво
+    }
+    else if (cursors.right.isDown) // якщо натиснута стрілка вправо
+    {
+        player.setVelocityX(160); // йти вправо
+        player.anims.play('left', true); // грати анімацію руху вправо
+        player.flipX = false; // повернути вправо
+    }
+    else // якщо не натиснута стрілка вліво чи вправо
+    {
+        player.setVelocityX(0); // зупинитись
+        player.anims.play('turn'); // грати анімацію стояння
+        // player.flipX = false;
+    }
 
+    if (cursors.up.isDown && player.body.touching.down)
+    {
+        // стрибнути, якщо натиснута стрілка вгору і гравець торкається землі
+        player.setVelocityY(-340);
+    }
 }
