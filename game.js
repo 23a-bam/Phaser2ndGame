@@ -49,6 +49,8 @@ function create() {
     // реєструє стрілки вліво, вправо, вгору, вниз
     cursors = this.input.keyboard.createCursorKeys();
 
+    bread = this.physics.add.group();
+    createBread(300, 750);
 }
 
 function createGround(start, y, count, scale, holes) {
@@ -61,6 +63,10 @@ function createGround(start, y, count, scale, holes) {
         child.setImmovable(true);
         child.body.setAllowGravity(false);
     });
+}
+
+function createBread(x, y) {
+    bread.create(x, y, 'bread');
 }
 
 function update() {
@@ -86,13 +92,16 @@ function update() {
         player.setVelocityY(-340);
     }
     if (player.x > 400) {
-        scroll();
+        scroll(3);
     }
 }
 
-function scroll() {
-    player.x -= 3;
+function scroll(x) {
+    player.x -= x;
     platforms.children.iterate(function (child) {
-        child.x -= 3;
+        child.x -= x;
+    });
+    bread.children.iterate(function (child) {
+        child.x -= x;
     });
 }
