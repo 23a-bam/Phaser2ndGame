@@ -21,6 +21,9 @@ var game = new Phaser.Game(config);
 
 var score = 0; // кількість очків
 var scoreText; // текстова змінна для очків
+var lives = 3;
+var livesText;
+var immunity = 0;
 
 function preload() {
     this.load.image('sky', "assets/sky.png");
@@ -37,7 +40,7 @@ function create() {
 
     platforms = this.physics.add.group();
 
-    createGround(0, 1034, 50, 1, new Array(4, 5, 6, 10, 11, 12));
+    createGround(0, 1034, 150, 1, new Array(4, 5, 6, 10, 11, 12));
     createGround(4, 920, 3, 1, new Array());
     createGround(9, 800, 3, 1, new Array());
     createGround(14, 665, 11, 1, new Array(17, 18, 19, 20, 21))
@@ -57,8 +60,25 @@ function create() {
     createBread(1100, 620);
 
     scoreText = this.add.text(16, 16, 'Очок: 0', { fontSize: '32px', fill: '#000' }); // додати текст до текстової змінної очків, задати його локацію
+    livesText = this.add.text(250, 16, 'Життів: 3', { fontSize: '32px', fill: '#000' });
 
     this.physics.add.collider(player, bread, collectBread, null, this);
+
+    enemies = this.physics.add.group();
+    this.physics.add.collider(enemies, platforms);
+    createEnemy(200, 100);
+
+    enemies.children.iterate(function (child) {
+        child.body.setGravityY(350); // додати гравітацію для ворогів
+        child.setScale(3);
+    });
+
+    this.physics.add.collider(player, enemies, hitEnemy, null, this);
+
+    const immunityFunction = setInterval(function() {
+        if (immunity == 0) {return;}
+        immunity--;
+    }, 10);
 }
 
 function createGround(start, y, count, scale, holes) {
@@ -77,10 +97,44 @@ function createBread(x, y) {
     bread.create(x, y, 'bread');
 }
 
+function createEnemy(x, y) {
+    enemies.create(x, y, 'enemy');
+}
+
 function collectBread(player, bread) {
     bread.disableBody(true, true);
     score += 1;
     scoreText.setText('Очок: ' + score);
+}
+
+function hitEnemy(player, enemy) {
+    // якщо зверху, вбити ворога
+    if (player.y < enemy.y - 80) {
+        enemy.disableBody(true, true);
+        score += 2;
+        scoreText.setText('Очок: ' + score);
+        player.setVelocityY(-100);
+    }
+    else {
+        if (immunity > 0) {
+            return;
+        }
+        if (player.x < enemy.x + 50) { // з лівої сторони
+            player.x -= enemy.x - player.x + 5;
+            player.setVelocityX(-120);
+        }
+        else { // з правої сторони
+            player.x += player.x - enemy.x + 5;
+            player.setVelocityX(120);
+        }
+        lives--;
+        // enemy.disableBody(true, true);
+        livesText.setText('Життів: ' + lives);
+        if (lives == 0) {
+            gameOver();
+        }
+        immunity = 40; // *10 мс
+    }
 }
 
 function update() {
@@ -118,4 +172,12 @@ function scroll(x) {
     bread.children.iterate(function (child) {
         child.x -= x;
     });
+    enemies.children.iterate(function (child) {
+        child.x -= x;
+    });
+}
+
+function gameOver() {
+    this.physics.pause();
+    gameOver = true;
 }
