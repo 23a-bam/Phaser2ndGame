@@ -26,6 +26,7 @@ var livesText;
 var immunity = 0;
 const velocity = 120;
 var velocityMultiplier = 1;
+var xTravelled = 0;
 
 function preload() {
     this.load.image('sky', "assets/sky.png");
@@ -42,10 +43,19 @@ function create() {
 
     platforms = this.physics.add.group();
 
-    createGround(0, 1034, 150, 1, new Array(4, 5, 6, 10, 11, 12));
-    createGround(4, 920, 3, 1, new Array());
-    createGround(9, 800, 3, 1, new Array());
-    createGround(14, 665, 11, 1, new Array(17, 18, 19, 20, 21))
+    createGround(0, 1034, 75, new Array(4, 5, 6, 10, 11, 12, 25, 26, 27, 28, 29, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45));
+    createGround(4, 920, 3, new Array());
+    createGround(9, 800, 3, new Array());
+    createGround(14, 665, 11, new Array(17, 18, 19, 20, 21));
+    createGround(27, 900, 1, new Array());
+    createGround(34, 850, 5, new Array(33));
+    // elevator start
+    createGround(77, 950, 4, new Array());
+    createGround(82, 800, 4, new Array());
+    createGround(87, 650, 4, new Array());
+    createGround(92, 500, 5, new Array(93));
+    createGround(97, 350, 4, new Array());
+    createGround(108, 1000, 10, new Array());
 
     player = this.physics.add.sprite(50, 700, 'hero');
     player.setScale(3);
@@ -58,8 +68,11 @@ function create() {
     cursors = this.input.keyboard.createCursorKeys();
 
     bread = this.physics.add.group();
-    createBread(250, 850);
-    createBread(1100, 620);
+    createBread(480, 720);
+    createBread(1150, 620);
+    createBread(1400, 500);
+    createLotOfBread(3000, 950, 50, 0, 11);
+    createLotOfBread(5000, 200, 20, 50, 15);
 
     scoreText = this.add.text(16, 16, 'Очок: 0', { fontSize: '32px', fill: '#000' }); // додати текст до текстової змінної очків, задати його локацію
     livesText = this.add.text(250, 16, 'Життів: 3', { fontSize: '32px', fill: '#000' });
@@ -68,7 +81,14 @@ function create() {
 
     enemies = this.physics.add.group();
     this.physics.add.collider(enemies, platforms);
-    createEnemy(200, 100);
+    createEnemy(275, 800);
+    createEnemy(1100, 550);
+    createEnemy(1500, 900);
+    createEnemy(2300, 900);
+    createEnemy(2400, 900);
+    createEnemy(2500, 900);
+    createEnemy(2600, 900);
+    createEnemy(2700, 900);
 
     enemies.children.iterate(function (child) {
         child.body.setGravityY(350); // додати гравітацію для ворогів
@@ -84,13 +104,15 @@ function create() {
 
     tractors = this.physics.add.group();
     this.physics.add.collider(player, tractors, collectTractor, null, this);
-    createTractor(275, 860)
+    createTractor(750, 600);
+    createTractor(1770, 790);
+    createTractor(2900, 950);
 }
 
-function createGround(start, y, count, scale, holes) {
+function createGround(start, y, count, holes) {
     for (let i = start; i < start + count; i++) {
         if (holes === null || !holes.includes(i)) { // якщо не задана діра
-            platforms.create(i * 48 * scale, y, 'tile').setScale(scale).setImmovable(true);
+            platforms.create(i * 48, y, 'tile').setImmovable(true);
         }
     }
     platforms.children.iterate(function (child) {
@@ -101,6 +123,15 @@ function createGround(start, y, count, scale, holes) {
 
 function createBread(x, y) {
     bread.create(x, y, 'bread');
+}
+function createLotOfBread(x, y, stepX, stepY, count) {
+    let a = x;
+    let b = y;
+    for (let i = 0; i < count; i++) {
+        createBread(a, b);
+        a += stepX;
+        b += stepY;
+    }
 }
 
 function createEnemy(x, y) {
@@ -185,6 +216,12 @@ function update() {
     if (player.x > 600) {
         scroll(2);
     }
+    if (player.y > 1000) {
+        gameOver();
+    }
+    if (xTravelled > 5000) {
+        gameOver();
+    }
 }
 
 function scroll(x) {
@@ -201,9 +238,12 @@ function scroll(x) {
     tractors.children.iterate(function (child) {
         child.x -= x;
     });
+    xTravelled += x;
 }
 
 function gameOver() {
-    this.physics.pause();
-    gameOver = true;
+    // this.physics.pause();
+    // gameOver = true;
+    alert("Гру завершено. Набрано очок: " + score + ".");
+    location.reload();
 }
