@@ -24,6 +24,8 @@ var scoreText; // текстова змінна для очків
 var lives = 3;
 var livesText;
 var immunity = 0;
+const velocity = 120;
+var velocityMultiplier = 1;
 
 function preload() {
     this.load.image('sky', "assets/sky.png");
@@ -79,6 +81,10 @@ function create() {
         if (immunity == 0) {return;}
         immunity--;
     }, 10);
+
+    tractors = this.physics.add.group();
+    this.physics.add.collider(player, tractors, collectTractor, null, this);
+    createTractor(275, 860)
 }
 
 function createGround(start, y, count, scale, holes) {
@@ -101,10 +107,27 @@ function createEnemy(x, y) {
     enemies.create(x, y, 'enemy');
 }
 
+function createTractor(x, y) {
+    tractors.create(x, y, 'tractor').setScale(2);
+}
+
 function collectBread(player, bread) {
     bread.disableBody(true, true);
     score += 1;
     scoreText.setText('Очок: ' + score);
+}
+
+function collectTractor(player, tractor) {
+    tractor.disableBody(true, true);
+    velocityMultiplier = 1.75;
+    player.setTint(0xffcc00);
+    immunity = 600;
+    score += 2;
+    scoreText.setText('Очок: ' + score);
+    const tractorFunction = setInterval(function () { // скинути швидкість через 6 секунд
+        velocityMultiplier = 1;
+        player.setTint(0xffffff);
+    }, 6000);
 }
 
 function hitEnemy(player, enemy) {
@@ -140,12 +163,12 @@ function hitEnemy(player, enemy) {
 function update() {
     if (cursors.left.isDown) // якщо натиснута стрілка вліво
     {
-        player.setVelocityX(-120); // йти вліво
+        player.setVelocityX(-velocity * velocityMultiplier); // йти вліво
         player.flipX = true; // повернути вліво
     }
     else if (cursors.right.isDown) // якщо натиснута стрілка вправо
     {
-        player.setVelocityX(120); // йти вправо
+        player.setVelocityX(velocity * velocityMultiplier); // йти вправо
         player.flipX = false; // повернути вправо
     }
     else // якщо не натиснута стрілка вліво чи вправо
@@ -173,6 +196,9 @@ function scroll(x) {
         child.x -= x;
     });
     enemies.children.iterate(function (child) {
+        child.x -= x;
+    });
+    tractors.children.iterate(function (child) {
         child.x -= x;
     });
 }
