@@ -74,7 +74,8 @@ function create() {
     createLotOfBread(3000, 950, 50, 0, 11);
     createLotOfBread(5000, 200, 20, 50, 15);
 
-    scoreText = this.add.text(16, 16, 'Очок: 0', { fontSize: '32px', fill: '#000' }); // додати текст до текстової змінної очків, задати його локацію
+    // scoreText = this.add.text(16, 16, 'Очок: 0', { fontSize: '32px', fill: '#000' }); // додати текст до текстової змінної очків, задати його локацію
+    updateScore();
     livesText = this.add.text(250, 16, 'Життів: 3', { fontSize: '32px', fill: '#000' });
 
     this.physics.add.collider(player, bread, collectBread, null, this);
@@ -145,7 +146,7 @@ function createTractor(x, y) {
 function collectBread(player, bread) {
     bread.disableBody(true, true);
     score += 1;
-    scoreText.setText('Очок: ' + score);
+    updateScore();
 }
 
 function collectTractor(player, tractor) {
@@ -154,7 +155,7 @@ function collectTractor(player, tractor) {
     player.setTint(0xffcc00);
     immunity = 600;
     score += 2;
-    scoreText.setText('Очок: ' + score);
+    updateScore();
     const tractorFunction = setInterval(function () { // скинути швидкість через 6 секунд
         velocityMultiplier = 1;
         player.setTint(0xffffff);
@@ -166,7 +167,7 @@ function hitEnemy(player, enemy) {
     if (player.y < enemy.y - 80) {
         enemy.disableBody(true, true);
         score += 2;
-        scoreText.setText('Очок: ' + score);
+        updateScore();
         player.setVelocityY(-100);
     }
     else {
@@ -246,4 +247,9 @@ function gameOver() {
     // gameOver = true;
     alert("Гру завершено. Набрано очок: " + score + ".");
     location.reload();
+}
+
+function updateScore() {
+    // scoreText.setText('Очок: ' + score);
+    document.getElementById("score").innerText = "Score: " + score;
 }

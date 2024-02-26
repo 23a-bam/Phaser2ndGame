@@ -8,5 +8,12 @@ body {
 */
 
 body {
+    position: absolute;
     margin: 0;
+}
+#score {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    font: 200% Consolas;
 }
