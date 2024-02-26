@@ -21,12 +21,13 @@ var game = new Phaser.Game(config);
 
 var score = 0; // кількість очків
 var scoreText; // текстова змінна для очків
-var lives = 3;
-var livesText;
+// var lives = 3;
+// var livesText;
 var immunity = 0;
 const velocity = 120;
 var velocityMultiplier = 1;
 var xTravelled = 0;
+var stopGame = false;
 
 function preload() {
     this.load.image('sky', "assets/sky.png");
@@ -76,7 +77,7 @@ function create() {
 
     // scoreText = this.add.text(16, 16, 'Очок: 0', { fontSize: '32px', fill: '#000' }); // додати текст до текстової змінної очків, задати його локацію
     updateScore();
-    livesText = this.add.text(250, 16, 'Життів: 3', { fontSize: '32px', fill: '#000' });
+    // livesText = this.add.text(250, 16, 'Життів: 3', { fontSize: '32px', fill: '#000' });
 
     this.physics.add.collider(player, bread, collectBread, null, this);
 
@@ -182,13 +183,13 @@ function hitEnemy(player, enemy) {
             player.x += player.x - enemy.x + 5;
             player.setVelocityX(120);
         }
-        lives--;
+        // lives--;
         // enemy.disableBody(true, true);
-        livesText.setText('Життів: ' + lives);
-        if (lives == 0) {
-            gameOver();
-        }
-        immunity = 40; // *10 мс
+        // livesText.setText('Життів: ' + lives);
+        // if (lives == 0) {
+        gameOver();
+        // }
+        // immunity = 40; // *10 мс
     }
 }
 
@@ -244,7 +245,8 @@ function scroll(x) {
 
 function gameOver() {
     // this.physics.pause();
-    // gameOver = true;
+    if (stopGame) {return;}
+    stopGame = true;
     alert("Гру завершено. Набрано очок: " + score + ".");
     location.reload();
 }
