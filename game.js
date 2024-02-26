@@ -145,13 +145,13 @@ function createTractor(x, y) {
 }
 
 function collectBread(player, bread) {
-    bread.disableBody(true, true);
+    bread.destroy();
     score += 1;
     updateScore();
 }
 
 function collectTractor(player, tractor) {
-    tractor.disableBody(true, true);
+    tractor.destroy();
     velocityMultiplier = 1.75;
     player.setTint(0xffcc00);
     immunity = 600;
@@ -166,7 +166,7 @@ function collectTractor(player, tractor) {
 function hitEnemy(player, enemy) {
     // якщо зверху, вбити ворога
     if (player.y < enemy.y - 80) {
-        enemy.disableBody(true, true);
+        enemy.destroy();
         score += 2;
         updateScore();
         player.setVelocityY(-100);
