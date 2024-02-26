@@ -36,6 +36,7 @@ function preload() {
     this.load.image('hero', "assets/grandpa.png");
     this.load.image('enemy', "assets/enemy.png");
     this.load.image('tractor', "assets/tractor.png");
+    this.load.image('flag', "assets/flag.png");
 }
 
 function create() {
@@ -55,8 +56,8 @@ function create() {
     createGround(82, 800, 4, new Array());
     createGround(87, 650, 4, new Array());
     createGround(92, 500, 5, new Array(93));
-    createGround(97, 350, 4, new Array());
-    createGround(108, 1000, 10, new Array());
+    createGround(97, 350, 5, new Array());
+    createGround(108, 900, 15, new Array());
 
     player = this.physics.add.sprite(50, 700, 'hero');
     player.setScale(3);
@@ -72,14 +73,14 @@ function create() {
     createBread(480, 720);
     createBread(1150, 620);
     createBread(1400, 500);
-    createLotOfBread(3000, 950, 50, 0, 11);
-    createLotOfBread(5000, 200, 20, 50, 15);
+    createLotOfBread(3000, 950, 50, 0, 12);
+    createLotOfBread(5000, 200, 20, 50, 12);
 
     // scoreText = this.add.text(16, 16, 'Очок: 0', { fontSize: '32px', fill: '#000' }); // додати текст до текстової змінної очків, задати його локацію
     updateScore();
     // livesText = this.add.text(250, 16, 'Життів: 3', { fontSize: '32px', fill: '#000' });
 
-    this.physics.add.collider(player, bread, collectBread, null, this);
+    this.physics.add.overlap(player, bread, collectBread, null, this);
 
     enemies = this.physics.add.group();
     this.physics.add.collider(enemies, platforms);
@@ -109,6 +110,9 @@ function create() {
     createTractor(750, 600);
     createTractor(1770, 790);
     createTractor(2900, 950);
+
+    flag = this.physics.add.sprite(5500, 560, 'flag').setOrigin(0, 0).setScale(1, 10); // розтягнути вертикально у 10 разів
+    this.physics.add.overlap(player, flag, hitFlag, null, this);
 }
 
 function createGround(start, y, count, holes) {
@@ -134,6 +138,9 @@ function createLotOfBread(x, y, stepX, stepY, count) {
         a += stepX;
         b += stepY;
     }
+}
+function hitFlag(player, flag) {
+    gameOver(true);
 }
 
 function createEnemy(x, y) {
@@ -187,7 +194,7 @@ function hitEnemy(player, enemy) {
         // enemy.disableBody(true, true);
         // livesText.setText('Життів: ' + lives);
         // if (lives == 0) {
-        gameOver();
+        gameOver(false);
         // }
         // immunity = 40; // *10 мс
     }
@@ -215,19 +222,17 @@ function update() {
         // стрибнути, якщо натиснута стрілка вгору і гравець торкається землі
         player.setVelocityY(-340);
     }
-    if (player.x > 600) {
+    if (player.x > 600) { // скроллінг
         scroll(2);
     }
-    if (player.y > 1000) {
-        gameOver();
-    }
-    if (xTravelled > 5000) {
-        gameOver();
+    if (player.y > 1000) { // герой впав
+        gameOver(false);
     }
 }
 
 function scroll(x) {
     player.x -= x;
+    flag.x -= x;
     platforms.children.iterate(function (child) {
         child.x -= x;
     });
@@ -243,11 +248,16 @@ function scroll(x) {
     xTravelled += x;
 }
 
-function gameOver() {
+function gameOver(win) {
     // this.physics.pause();
     if (stopGame) {return;}
     stopGame = true;
-    alert("Гру завершено. Набрано очок: " + score + ".");
+    if (win) {
+        alert("Ви виграли! Набрано очок: " + score + ".");
+    }
+    else {
+        alert("Гру завершено. Набрано очок: " + score + ".");
+    }
     location.reload();
 }
 
