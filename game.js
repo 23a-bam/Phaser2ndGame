@@ -21,6 +21,7 @@ var game = new Phaser.Game(config);
 
 var score = 0; // кількість очків
 var scoreText; // текстова змінна для очків
+var timer = -1; // *100 мс
 // var lives = 3;
 // var livesText;
 var immunity = 0;
@@ -59,7 +60,7 @@ function create() {
     createGround(97, 350, 5, new Array());
     createGround(108, 900, 15, new Array());
 
-    player = this.physics.add.sprite(50, 700, 'hero');
+    player = this.physics.add.sprite(75, 700, 'hero');
     player.setScale(3);
     player.setCollideWorldBounds(true);
     this.physics.add.collider(player, platforms);
@@ -113,6 +114,11 @@ function create() {
 
     flag = this.physics.add.sprite(5500, 560, 'flag').setOrigin(0, 0).setScale(1, 10); // розтягнути вертикально у 10 разів
     this.physics.add.overlap(player, flag, hitFlag, null, this);
+
+    const timerFunction = setInterval(function() {
+        timer++;
+        updateTime();
+      }, 95); // повторювати кожні 95 мс (-5 мс для владнання похибки)
 }
 
 function createGround(start, y, count, holes) {
@@ -223,7 +229,7 @@ function update() {
         player.setVelocityY(-340);
     }
     if (player.x > 600) { // скроллінг
-        scroll(2);
+        scroll(2 + (player.x - 600) / 150.0 ); // адаптивний скроллінг у залежності від x
     }
     if (player.y > 1000) { // герой впав
         gameOver(false);
@@ -264,4 +270,20 @@ function gameOver(win) {
 function updateScore() {
     // scoreText.setText('Очок: ' + score);
     document.getElementById("score").innerText = "Score: " + score;
+}
+
+function updateTime() {
+    document.getElementById("timer").innerText = "Timer: " + formatTimerText(timer);
+}
+function formatTimerText(time)
+{
+    // розраховує мілісекунди * 100 (децисекунди), секунди й хвилини
+    let ms = time % 10; // *100 мс
+    let s = Math.floor((time / 10) % 60);
+    let min = Math.floor(time / 600);
+    // якщо кількість секунд і хвилин одноцифрова, додати на початку 0
+    let sText = s < 10 ? "0" + s : "" + s;
+    let mText = min < 10 ? "0" + min : "" + min;
+    // відформатовує текст і повертає
+    return mText + ":" + sText + "." + ms;
 }

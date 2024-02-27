@@ -17,3 +17,9 @@ body {
     left: 10px;
     font: 200% Consolas;
 }
+#timer {
+    position: fixed;
+    top: 60px;
+    left: 10px;
+    font: 200% Consolas;
+}
