@@ -46,7 +46,7 @@ function create() {
 
     platforms = this.physics.add.group();
 
-    createGround(0, 1034, 75, new Array(4, 5, 6, 10, 11, 12, 25, 26, 27, 28, 29, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45));
+    createGround(0, 1034, 75, new Array(4, 5, 6, 10, 11, 12, 25, 26, 27, 28, 29, 36, 37, 38, 39, 40, 41, 42, 43, 44));
     createGround(4, 920, 3, new Array());
     createGround(9, 800, 3, new Array());
     createGround(14, 665, 11, new Array(17, 18, 19, 20, 21));
@@ -254,19 +254,6 @@ function scroll(x) {
     xTravelled += x;
 }
 
-function gameOver(win) {
-    // this.physics.pause();
-    if (stopGame) {return;}
-    stopGame = true;
-    if (win) {
-        alert("Ви виграли! Набрано очок: " + score + ".");
-    }
-    else {
-        alert("Гру завершено. Набрано очок: " + score + ".");
-    }
-    location.reload();
-}
-
 function updateScore() {
     // scoreText.setText('Очок: ' + score);
     document.getElementById("score").innerText = "Score: " + score;
@@ -286,4 +273,51 @@ function formatTimerText(time)
     let mText = min < 10 ? "0" + min : "" + min;
     // відформатовує текст і повертає
     return mText + ":" + sText + "." + ms;
+}
+
+function fetchRecords() {
+    let cookies = document.cookie;
+    if (cookies == "") {return new Array(0, 99999);} // якщо не збережено, далі не йти
+    const data = cookies.split("=")[1].split(" "); // поділити по коміркам по черзі
+    // data[0] - high score, data[1] - time
+    return data;
+}
+
+function gameOver(win) {
+    // this.physics.pause();
+    if (stopGame) {return;}
+    stopGame = true;
+    if (win) {
+        const data = fetchRecords();
+        let highScore = data[0] // якщо результати ще не збережені, буде 0
+        let lowestTime = data[1] ?? 99999; // якщо результати ще не збережені, буде 99999 (велике значення, яке має бути побито при першій перемозі)
+        let record1 = (score > highScore ? "минулий рекорд: " : "рекорд: ") + highScore;
+        let record2 = (timer < lowestTime ? "минулий рекорд: " : "рекорд: ") + formatTimerText(lowestTime);
+        if (lowestTime == 99999) record2 = "минулий рекорд не збережено";
+
+        /*
+        приклад повідомлення:
+        Ви виграли!
+        Набрано очок: 45 (минулий рекорд: 43).
+        Витрачено часу: 00:55.6 (рекорд: 00:49.4).
+        */
+        alert("Ви виграли!\nНабрано очок: " + score + " (" + record1 + ").\nВитрачено часу: " + formatTimerText(timer) + " (" + record2 + ").");
+
+        // якщо хоча б один із рекордів побито, зберегти cookie
+        if (score > highScore || timer < lowestTime) {
+            // якщо кількість очків більша, зберегти її, 
+            saveResultAsCookie(score > highScore ? score : highScore, timer < lowestTime ? timer : lowestTime);
+        }
+    }
+    else {
+        alert("Гру завершено. Набрано очок: " + score + ".");
+    }
+    location.reload();
+}
+
+function saveResultAsCookie(score, time) {
+    // задати вміст cookie
+    str = score +  " " + time; // сам контент cookie
+    // зберегти cookie
+    document.cookie = "data=" + str + "; expires=Thu, 12 Feb 2026 12:00:00 UTC";
 }
