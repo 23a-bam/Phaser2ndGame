@@ -25,10 +25,13 @@ var timer = -1; // *100 мс
 // var lives = 3;
 // var livesText;
 var immunity = 0;
-const velocity = 120;
+const velocity = 120; // базова 
 var velocityMultiplier = 1;
 var xTravelled = 0;
 var stopGame = false;
+
+var startAuto = 6000; // x, після якого почнеться автоматична генерація
+var worldWidth = 15000; // всього ширина
 
 function preload() {
     this.load.image('sky', "assets/sky.png");
@@ -42,11 +45,14 @@ function preload() {
 
 function create() {
     // додає небо, починаючи з точки (0, 0)
-    this.add.image(0, 0, 'sky').setOrigin(0, 0).setDisplaySize(1920, 1080); // setDisplaySize розтягує
+    this.add.image(0, 0, 'sky').setOrigin(0, 0).setDisplaySize(worldWidth, 1080); // setDisplaySize розтягує
+
+    // для камери
+    // this.add.tileSprite(0, 0, worldWidth, 1080, "sky").setDisplaySize(1920, 1080).setOrigin(0, 0);
 
     platforms = this.physics.add.group();
 
-    createGround(0, 1034, 75, new Array(4, 5, 6, 10, 11, 12, 25, 26, 27, 28, 29, 36, 37, 38, 39, 40, 41, 42, 43, 44));
+    createGround(0, 1034, 75, new Array(4, 5, 6, 10, 11, 12, 25, 26, 27, 28, 29, 36, 37, 38, 39, 40, 41, 42, 43, 44)); // земля
     createGround(4, 920, 3, new Array());
     createGround(9, 800, 3, new Array());
     createGround(14, 665, 11, new Array(17, 18, 19, 20, 21));
@@ -60,6 +66,8 @@ function create() {
     createGround(97, 350, 5, new Array());
     createGround(108, 900, 15, new Array());
 
+
+    // гравець
     player = this.physics.add.sprite(75, 700, 'hero');
     player.setScale(3);
     player.setCollideWorldBounds(true);
@@ -112,25 +120,46 @@ function create() {
     createTractor(1770, 790);
     createTractor(2900, 950);
 
+    // додати флаг
     flag = this.physics.add.sprite(5500, 560, 'flag').setOrigin(0, 0).setScale(1, 10); // розтягнути вертикально у 10 разів
     this.physics.add.overlap(player, flag, hitFlag, null, this);
 
     const timerFunction = setInterval(function() {
         timer++;
         updateTime();
-      }, 95); // повторювати кожні 95 мс (-5 мс для владнання похибки)
+    }, 95); // повторювати кожні 95 мс (-5 мс для владнання похибки)
+
+    // створити землю після x = 6000 автоматично
+    createGroundAuto();
+
+    // налаштування камери
+    this.cameras.main.setBounds(0, 0, worldWidth, window.innerHeight);
+    this.physics.world.setBounds(0, 0, worldWidth, window.innerHeight);
+    // слідкування камери за гравцем
+    this.cameras.main.startFollow(player);
 }
 
+// start - стартова позиція по x * 48
+// count - кількість платформ
+// holes - масив значень x*48, де треба дірки
 function createGround(start, y, count, holes) {
     for (let i = start; i < start + count; i++) {
         if (holes === null || !holes.includes(i)) { // якщо не задана діра
             platforms.create(i * 48, y, 'tile').setImmovable(true);
         }
     }
+    // вимкнути гравітацію
     platforms.children.iterate(function (child) {
         child.setImmovable(true);
         child.body.setAllowGravity(false);
     });
+}
+
+function createGroundAuto() {
+    // починаючи з x = 6000, створювати землю автоматично
+    for (var x = startAuto; x < worldWidth;  x += 48) {
+        platforms.create(x, 1000, 'tile').setOrigin(0, 0).refreshBody();
+    }
 }
 
 function createBread(x, y) {
@@ -158,19 +187,19 @@ function createTractor(x, y) {
 }
 
 function collectBread(player, bread) {
-    bread.destroy();
+    bread.destroy(); // видалити хліб з гри
     score += 1;
     updateScore();
 }
 
 function collectTractor(player, tractor) {
     tractor.destroy();
-    velocityMultiplier = 1.75;
-    player.setTint(0xffcc00);
-    immunity = 600;
+    velocityMultiplier = 1.75; // збільшити швидкість у 1.75 разів
+    player.setTint(0xffcc00); // поставити гравця зеленим
+    immunity = 600; // додати імунітет на 6 секунд
     score += 2;
     updateScore();
-    const tractorFunction = setInterval(function () { // скинути швидкість через 6 секунд
+    const tractorFunction = setInterval(function () { // скинути швидкість і колір через 6 секунд
         velocityMultiplier = 1;
         player.setTint(0xffffff);
     }, 6000);
@@ -185,6 +214,7 @@ function hitEnemy(player, enemy) {
         player.setVelocityY(-100);
     }
     else {
+        // якщо імунітет, не зважати
         if (immunity > 0) {
             return;
         }
@@ -228,14 +258,17 @@ function update() {
         // стрибнути, якщо натиснута стрілка вгору і гравець торкається землі
         player.setVelocityY(-340);
     }
+    /*
     if (player.x > 600) { // скроллінг
         scroll(2 + (player.x - 600) / 150.0 ); // адаптивний скроллінг у залежності від x
     }
+    */
     if (player.y > 1000) { // герой впав
         gameOver(false);
     }
 }
 
+/*
 function scroll(x) {
     player.x -= x;
     flag.x -= x;
@@ -253,6 +286,7 @@ function scroll(x) {
     });
     xTravelled += x;
 }
+*/
 
 function updateScore() {
     // scoreText.setText('Очок: ' + score);
