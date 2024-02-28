@@ -68,7 +68,10 @@ function create() {
 
 
     // гравець
-    player = this.physics.add.sprite(75, 700, 'hero');
+    // створює гравця на старті або на чекпойнті залежно від збереженого результату
+    checkpoint = fetchRecords()[1] != 99999;
+    player = checkpoint ? this.physics.add.sprite(5750, 800, 'hero') : this.physics.add.sprite(175, 700, 'hero');
+    // налаштування гравця
     player.setScale(3);
     player.setCollideWorldBounds(true);
     this.physics.add.collider(player, platforms);
@@ -78,6 +81,7 @@ function create() {
     // реєструє стрілки вліво, вправо, вгору, вниз
     cursors = this.input.keyboard.createCursorKeys();
 
+    // хліб
     bread = this.physics.add.group();
     createBread(480, 720);
     createBread(1150, 620);
@@ -89,8 +93,10 @@ function create() {
     updateScore();
     // livesText = this.add.text(250, 16, 'Життів: 3', { fontSize: '32px', fill: '#000' });
 
+    // колайдер для хліба
     this.physics.add.overlap(player, bread, collectBread, null, this);
 
+    // вороги
     enemies = this.physics.add.group();
     this.physics.add.collider(enemies, platforms);
     createEnemy(275, 800);
@@ -104,16 +110,18 @@ function create() {
 
     enemies.children.iterate(function (child) {
         child.body.setGravityY(350); // додати гравітацію для ворогів
-        child.setScale(3);
+        child.setScale(3); // збільшити у 3 рази
     });
 
     this.physics.add.collider(player, enemies, hitEnemy, null, this);
 
+    // зменшувати імунітет
     const immunityFunction = setInterval(function() {
         if (immunity == 0) {return;}
         immunity--;
     }, 10);
 
+    // трактори
     tractors = this.physics.add.group();
     this.physics.add.collider(player, tractors, collectTractor, null, this);
     createTractor(750, 600);
@@ -122,8 +130,12 @@ function create() {
 
     // додати флаг
     flag = this.physics.add.sprite(5500, 560, 'flag').setOrigin(0, 0).setScale(1, 10); // розтягнути вертикально у 10 разів
-    this.physics.add.overlap(player, flag, hitFlag, null, this);
+    // якщо чекпойнт, то флаг неактивний
+    if (!checkpoint) {
+        this.physics.add.overlap(player, flag, hitFlag, null, this);
+    }
 
+    // таймер
     const timerFunction = setInterval(function() {
         timer++;
         updateTime();
@@ -137,6 +149,8 @@ function create() {
     this.physics.world.setBounds(0, 0, worldWidth, window.innerHeight);
     // слідкування камери за гравцем
     this.cameras.main.startFollow(player);
+
+    player.body.setGravityY(350);
 }
 
 // start - стартова позиція по x * 48
@@ -148,11 +162,11 @@ function createGround(start, y, count, holes) {
             platforms.create(i * 48, y, 'tile').setImmovable(true);
         }
     }
-    // вимкнути гравітацію
+    /* вимкнути гравітацію (уже в createGroundAuto)
     platforms.children.iterate(function (child) {
         child.setImmovable(true);
         child.body.setAllowGravity(false);
-    });
+    }); */
 }
 
 function createGroundAuto() {
@@ -160,6 +174,14 @@ function createGroundAuto() {
     for (var x = startAuto; x < worldWidth;  x += 48) {
         platforms.create(x, 1000, 'tile').setOrigin(0, 0).refreshBody();
     }
+    platforms.children.iterate(function (child) {
+        child.setImmovable(true);
+        child.body.setAllowGravity(false);
+    });
+}
+
+function createPlatformsAuto() {
+
 }
 
 function createBread(x, y) {
@@ -335,18 +357,23 @@ function gameOver(win) {
         Набрано очок: 45 (минулий рекорд: 43).
         Витрачено часу: 00:55.6 (рекорд: 00:49.4).
         */
-        alert("Ви виграли!\nНабрано очок: " + score + " (" + record1 + ").\nВитрачено часу: " + formatTimerText(timer) + " (" + record2 + ").");
+        alert("Ви досягли чекпойнту!\nНабрано очок: " + score + " (" + record1 + ").\nВитрачено часу: " + formatTimerText(timer) + " (" + record2 + ").");
 
         // якщо хоча б один із рекордів побито, зберегти cookie
         if (score > highScore || timer < lowestTime) {
             // якщо кількість очків більша, зберегти її, 
             saveResultAsCookie(score > highScore ? score : highScore, timer < lowestTime ? timer : lowestTime);
         }
+
+        // перемістити гравця до фактичної локації чекпойнту
+        player.x = 5750;
+        player.y = 800;
+        stopGame = false;
     }
     else {
         alert("Гру завершено. Набрано очок: " + score + ".");
+        location.reload();
     }
-    location.reload();
 }
 
 function saveResultAsCookie(score, time) {
