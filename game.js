@@ -33,6 +33,9 @@ var stopGame = false;
 var startAuto = 6000; // x, після якого почнеться автоматична генерація
 var worldWidth = 15000; // всього ширина
 
+const platformsY = [250, 400, 550, 700, 850]; // можливі значення y для платформ
+const platformProbability = 0.1;
+
 function preload() {
     this.load.image('sky', "assets/sky.png");
     this.load.image('tile', "assets/tile.png");
@@ -143,6 +146,8 @@ function create() {
 
     // створити землю після x = 6000 автоматично
     createGroundAuto();
+    // випадково створити платформи
+    createPlatformsAuto();
 
     // налаштування камери
     this.cameras.main.setBounds(0, 0, worldWidth, window.innerHeight);
@@ -162,7 +167,7 @@ function createGround(start, y, count, holes) {
             platforms.create(i * 48, y, 'tile').setImmovable(true);
         }
     }
-    /* вимкнути гравітацію (уже в createGroundAuto)
+    /* вимкнути гравітацію (уже в createPlatformsAuto)
     platforms.children.iterate(function (child) {
         child.setImmovable(true);
         child.body.setAllowGravity(false);
@@ -174,15 +179,29 @@ function createGroundAuto() {
     for (var x = startAuto; x < worldWidth;  x += 48) {
         platforms.create(x, 1000, 'tile').setOrigin(0, 0).refreshBody();
     }
+}
+
+function createPlatformsAuto() {
+    platformsY.forEach(ob => { // для кожного можливого значення Y платформи
+        for (var x = startAuto; x < worldWidth; x += 48) {
+            if (Math.random() < platformProbability) { // згенерувати число від 0 до 1, якщо воно менше ймовірності, створити платформу
+                let length = 1 + getRandomInt(3) + getRandomInt(8); // випадково обрати довжину платформи
+                for (var a = 0; a < length; a++) {
+                    platforms.create(x, ob, 'tile').setOrigin(0, 0).refreshBody();
+                    x += 48;
+                }
+                x += 160; // зробити відступ
+            }
+        }
+    });
     platforms.children.iterate(function (child) {
         child.setImmovable(true);
         child.body.setAllowGravity(false);
     });
 }
-
-function createPlatformsAuto() {
-
-}
+function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
+  }
 
 function createBread(x, y) {
     bread.create(x, y, 'bread');
