@@ -33,8 +33,12 @@ var stopGame = false;
 var startAuto = 6000; // x, після якого почнеться автоматична генерація
 var worldWidth = 15000; // всього ширина
 
-const platformsY = [250, 400, 550, 700, 850]; // можливі значення y для платформ
+const YLines = [250, 400, 550, 700, 850]; // можливі значення y для платформ
 const platformProbability = 0.1;
+const breadYOffset = -20;
+const tractorYOffset = -24;
+const breadProbability = 0.02;
+const tractorProbability = 0.01;
 
 function preload() {
     this.load.image('sky', "assets/sky.png");
@@ -148,6 +152,8 @@ function create() {
     createGroundAuto();
     // випадково створити платформи
     createPlatformsAuto();
+    createBreadAuto();
+    createTractorsAuto();
 
     // налаштування камери
     this.cameras.main.setBounds(0, 0, worldWidth, window.innerHeight);
@@ -182,15 +188,15 @@ function createGroundAuto() {
 }
 
 function createPlatformsAuto() {
-    platformsY.forEach(ob => { // для кожного можливого значення Y платформи
+    YLines.forEach(y => { // для кожного можливого значення Y платформи
         for (var x = startAuto; x < worldWidth; x += 48) {
             if (Math.random() < platformProbability) { // згенерувати число від 0 до 1, якщо воно менше ймовірності, створити платформу
                 let length = 1 + getRandomInt(3) + getRandomInt(8); // випадково обрати довжину платформи
                 for (var a = 0; a < length; a++) {
-                    platforms.create(x, ob, 'tile').setOrigin(0, 0).refreshBody();
+                    platforms.create(x, y, 'tile').setOrigin(0, 0).refreshBody(); // створити платформу
                     x += 48;
                 }
-                x += 160; // зробити відступ
+                x += 115; // зробити відступ (буде ще +48)
             }
         }
     });
@@ -201,7 +207,27 @@ function createPlatformsAuto() {
 }
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
-  }
+}
+
+function createBreadAuto() {
+    YLines.forEach(y => {
+        for (var x = startAuto; x < worldWidth; x += 50) { // значення не кратні 48 обрані для нелінійності
+            if (Math.random() < breadProbability) {
+                createBread(x, y + breadYOffset);
+            }
+        }
+    });
+}
+
+function createTractorsAuto() {
+    YLines.forEach(y => {
+        for (var x = startAuto; x < worldWidth; x += 50) {
+            if (Math.random() < tractorProbability) {
+                createTractor(x, y + tractorYOffset);
+            }
+        }
+    });
+}
 
 function createBread(x, y) {
     bread.create(x, y, 'bread');
