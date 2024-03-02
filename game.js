@@ -37,8 +37,10 @@ const YLines = [250, 400, 550, 700, 850]; // можливі значення y �
 const platformProbability = 0.1;
 const breadYOffset = -20;
 const tractorYOffset = -24;
+const enemyYOffset = -50;
 const breadProbability = 0.02;
 const tractorProbability = 0.01;
+const enemyProbability = 0.013;
 
 function preload() {
     this.load.image('sky', "assets/sky.png");
@@ -115,11 +117,6 @@ function create() {
     createEnemy(2600, 900);
     createEnemy(2700, 900);
 
-    enemies.children.iterate(function (child) {
-        child.body.setGravityY(350); // додати гравітацію для ворогів
-        child.setScale(3); // збільшити у 3 рази
-    });
-
     this.physics.add.collider(player, enemies, hitEnemy, null, this);
 
     // зменшувати імунітет
@@ -150,10 +147,17 @@ function create() {
 
     // створити землю після x = 6000 автоматично
     createGroundAuto();
-    // випадково створити платформи
+    // випадково створити ігрові об'єкти
     createPlatformsAuto();
     createBreadAuto();
     createTractorsAuto();
+    createEnemiesAuto();
+
+    // налаштування ворогів
+    enemies.children.iterate(function (child) {
+        child.body.setGravityY(350); // додати гравітацію для ворогів
+        child.setScale(3); // збільшити у 3 рази
+    });
 
     // налаштування камери
     this.cameras.main.setBounds(0, 0, worldWidth, window.innerHeight);
@@ -224,6 +228,16 @@ function createTractorsAuto() {
         for (var x = startAuto; x < worldWidth; x += 50) {
             if (Math.random() < tractorProbability) {
                 createTractor(x, y + tractorYOffset);
+            }
+        }
+    });
+}
+
+function createEnemiesAuto() {
+    YLines.forEach(y => {
+        for (var x = startAuto; x < worldWidth; x += 50) {
+            if (Math.random() < enemyProbability) {
+                createEnemy(x, y + enemyYOffset);
             }
         }
     });
