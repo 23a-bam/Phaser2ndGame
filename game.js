@@ -6,7 +6,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 0},
+            gravity: { y: 0 },
             debug: false
         }
     },
@@ -31,9 +31,9 @@ var xTravelled = 0;
 var stopGame = false;
 
 var startAuto = 6000; // x, після якого почнеться автоматична генерація
-var worldWidth = 15000; // всього ширина
+var worldWidth = 15600; // всього ширина
 
-const YLines = [250, 400, 550, 700, 850]; // можливі значення y для платформ
+const YLines = [250, 400, 550, 700, 850, 1000]; // можливі значення y для платформ
 const platformProbability = 0.1;
 const breadYOffset = -20;
 const tractorYOffset = -24;
@@ -41,6 +41,7 @@ const enemyYOffset = -50;
 const breadProbability = 0.02;
 const tractorProbability = 0.01;
 const enemyProbability = 0.013;
+const decor = ['bush', 'tree', 'mushroom'];
 
 function preload() {
     this.load.image('sky', "assets/sky.png");
@@ -50,6 +51,9 @@ function preload() {
     this.load.image('enemy', "assets/enemy.png");
     this.load.image('tractor', "assets/tractor.png");
     this.load.image('flag', "assets/flag.png");
+    this.load.image('bush', "assets/bush.png");
+    this.load.image('tree', "assets/tree.png");
+    this.load.image('mushroom', "assets/mushroom.png");
 }
 
 function create() {
@@ -75,10 +79,14 @@ function create() {
     createGround(97, 350, 5, new Array());
     createGround(108, 900, 15, new Array());
 
+    // декорації
+    decorations = this.physics.add.group();
+    createDecorations();
 
     // гравець
     // створює гравця на старті або на чекпойнті залежно від збереженого результату
-    checkpoint = fetchRecords()[1] != 99999;
+    // checkpoint = fetchRecords()[1] != 99999;
+    checkpoint = true;
     player = checkpoint ? this.physics.add.sprite(5750, 800, 'hero') : this.physics.add.sprite(175, 700, 'hero');
     // налаштування гравця
     player.setScale(3);
@@ -120,8 +128,8 @@ function create() {
     this.physics.add.collider(player, enemies, hitEnemy, null, this);
 
     // зменшувати імунітет
-    const immunityFunction = setInterval(function() {
-        if (immunity == 0) {return;}
+    const immunityFunction = setInterval(function () {
+        if (immunity == 0) { return; }
         immunity--;
     }, 10);
 
@@ -140,7 +148,7 @@ function create() {
     }
 
     // таймер
-    const timerFunction = setInterval(function() {
+    const timerFunction = setInterval(function () {
         timer++;
         updateTime();
     }, 95); // повторювати кожні 95 мс (-5 мс для владнання похибки)
@@ -186,7 +194,7 @@ function createGround(start, y, count, holes) {
 
 function createGroundAuto() {
     // починаючи з x = 6000, створювати землю автоматично
-    for (var x = startAuto; x < worldWidth;  x += 48) {
+    for (var x = startAuto; x < worldWidth; x += 48) {
         platforms.create(x, 1000, 'tile').setOrigin(0, 0).refreshBody();
     }
 }
@@ -210,7 +218,7 @@ function createPlatformsAuto() {
     });
 }
 function getRandomInt(max) {
-    return Math.floor(Math.random() * max);
+    return Phaser.Math.Between(0, max);
 }
 
 function createBreadAuto() {
@@ -241,6 +249,17 @@ function createEnemiesAuto() {
             }
         }
     });
+}
+
+function createDecorations() {
+    for (var x = startAuto; x < worldWidth; x += 400) {
+        xRandom = getRandomInt(300); // зміщення по x
+        scale = Phaser.Math.Between(0.7, 1.3); // випадковий розмір
+        index = getRandomInt(decor.length); // обрати випадковий елемент з декорацій
+        if (index == decor.length) {continue;} // або нічого не обирати
+        type = decor[index]
+        decorations.create(x + xRandom, 1000, type).setOrigin(0, 1).setScale(scale); // створити відповідну декорацію
+    }
 }
 
 function createBread(x, y) {
@@ -334,8 +353,7 @@ function update() {
         // player.flipX = false;
     }
 
-    if (cursors.up.isDown && player.body.touching.down)
-    {
+    if (cursors.up.isDown && player.body.touching.down) {
         // стрибнути, якщо натиснута стрілка вгору і гравець торкається землі
         player.setVelocityY(-340);
     }
@@ -377,8 +395,7 @@ function updateScore() {
 function updateTime() {
     document.getElementById("timer").innerText = "Timer: " + formatTimerText(timer);
 }
-function formatTimerText(time)
-{
+function formatTimerText(time) {
     // розраховує мілісекунди * 100 (децисекунди), секунди й хвилини
     let ms = time % 10; // *100 мс
     let s = Math.floor((time / 10) % 60);
@@ -392,7 +409,7 @@ function formatTimerText(time)
 
 function fetchRecords() {
     let cookies = document.cookie;
-    if (cookies == "") {return new Array(0, 99999);} // якщо не збережено, далі не йти
+    if (cookies == "") { return new Array(0, 99999); } // якщо не збережено, далі не йти
     const data = cookies.split("=")[1].split(" "); // поділити по коміркам по черзі
     // data[0] - high score, data[1] - time
     return data;
@@ -400,7 +417,7 @@ function fetchRecords() {
 
 function gameOver(win) {
     // this.physics.pause();
-    if (stopGame) {return;}
+    if (stopGame) { return; }
     stopGame = true;
     if (win) {
         const data = fetchRecords();
@@ -437,7 +454,7 @@ function gameOver(win) {
 
 function saveResultAsCookie(score, time) {
     // задати вміст cookie
-    str = score +  " " + time; // сам контент cookie
+    str = score + " " + time; // сам контент cookie
     // зберегти cookie
     document.cookie = "data=" + str + "; expires=Thu, 12 Feb 2026 12:00:00 UTC";
 }
