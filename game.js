@@ -79,7 +79,7 @@ function create() {
     createGround(97, 350, 5, new Array());
     createGround(108, 900, 15, new Array());
 
-    // декорації
+    // декорації (на задньому плані)
     decorations = this.physics.add.group();
     createDecorations();
 
@@ -155,11 +155,11 @@ function create() {
 
     // створити землю після x = 6000 автоматично
     createGroundAuto();
-    // випадково створити ігрові об'єкти
     createPlatformsAuto();
-    createBreadAuto();
-    createTractorsAuto();
-    createEnemiesAuto();
+    // випадково створити ігрові об'єкти
+    createElementAuto(enemyProbability, enemyYOffset, createEnemy);
+    createElementAuto(breadProbability, breadYOffset, createBread);
+    createElementAuto(tractorProbability, tractorYOffset, createTractor);
 
     // налаштування ворогів
     enemies.children.iterate(function (child) {
@@ -174,6 +174,8 @@ function create() {
     this.cameras.main.startFollow(player);
 
     player.body.setGravityY(350);
+
+    createDecorations(); // додати ще раз на передньому плані
 }
 
 // start - стартова позиція по x * 48
@@ -221,45 +223,29 @@ function getRandomInt(max) {
     return Phaser.Math.Between(0, max);
 }
 
-function createBreadAuto() {
+function createElementAuto(probability, offset, creator) {
     YLines.forEach(y => {
         for (var x = startAuto; x < worldWidth; x += 50) { // значення не кратні 48 обрані для нелінійності
-            if (Math.random() < breadProbability) {
-                createBread(x, y + breadYOffset);
-            }
-        }
-    });
-}
-
-function createTractorsAuto() {
-    YLines.forEach(y => {
-        for (var x = startAuto; x < worldWidth; x += 50) {
-            if (Math.random() < tractorProbability) {
-                createTractor(x, y + tractorYOffset);
-            }
-        }
-    });
-}
-
-function createEnemiesAuto() {
-    YLines.forEach(y => {
-        for (var x = startAuto; x < worldWidth; x += 50) {
-            if (Math.random() < enemyProbability) {
-                createEnemy(x, y + enemyYOffset);
+            if (Math.random() < probability) {
+                creator(x, y + offset);
             }
         }
     });
 }
 
 function createDecorations() {
-    for (var x = startAuto; x < worldWidth; x += 400) {
-        xRandom = getRandomInt(300); // зміщення по x
+    for (var x = startAuto; x < worldWidth; x += 800) {
+        xRandom = getRandomInt(700); // зміщення по x
         scale = Phaser.Math.Between(0.7, 1.3); // випадковий розмір
         index = getRandomInt(decor.length); // обрати випадковий елемент з декорацій
         if (index == decor.length) {continue;} // або нічого не обирати
         type = decor[index]
         decorations.create(x + xRandom, 1000, type).setOrigin(0, 1).setScale(scale); // створити відповідну декорацію
     }
+}
+
+function hitFlag(player, flag) {
+    gameOver(true);
 }
 
 function createBread(x, y) {
@@ -273,9 +259,6 @@ function createLotOfBread(x, y, stepX, stepY, count) {
         a += stepX;
         b += stepY;
     }
-}
-function hitFlag(player, flag) {
-    gameOver(true);
 }
 
 function createEnemy(x, y) {
