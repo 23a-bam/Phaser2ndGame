@@ -33,11 +33,11 @@ var stopGame = false;
 var startAuto = 6000; // x, після якого почнеться автоматична генерація
 var worldWidth = 15600; // всього ширина
 
-const YLines = [250, 400, 550, 700, 850, 1000]; // можливі значення y для платформ
-const platformProbability = 0.1;
+const YLines = [250, 400, 550, 700, 850, 1000]; // можливі значення y для платформ та об'єктів
 const breadYOffset = -20;
 const tractorYOffset = -24;
 const enemyYOffset = -50;
+const platformProbability = 0.1;
 const breadProbability = 0.02;
 const tractorProbability = 0.01;
 const enemyProbability = 0.013;
@@ -64,20 +64,7 @@ function create() {
     // this.add.tileSprite(0, 0, worldWidth, 1080, "sky").setDisplaySize(1920, 1080).setOrigin(0, 0);
 
     platforms = this.physics.add.group();
-
-    createGround(0, 1034, 75, new Array(4, 5, 6, 10, 11, 12, 25, 26, 27, 28, 29, 36, 37, 38, 39, 40, 41, 42, 43, 44)); // земля
-    createGround(4, 920, 3, new Array());
-    createGround(9, 800, 3, new Array());
-    createGround(14, 665, 11, new Array(17, 18, 19, 20, 21));
-    createGround(27, 900, 1, new Array());
-    createGround(34, 850, 5, new Array(33));
-    // elevator start
-    createGround(77, 950, 4, new Array());
-    createGround(82, 800, 4, new Array());
-    createGround(87, 650, 4, new Array());
-    createGround(92, 500, 5, new Array(93));
-    createGround(97, 350, 5, new Array());
-    createGround(108, 900, 15, new Array());
+    createGround(108, 800, 15, new Array());
 
     // декорації (на задньому плані)
     decorations = this.physics.add.group();
@@ -86,8 +73,7 @@ function create() {
     // гравець
     // створює гравця на старті або на чекпойнті залежно від збереженого результату
     // checkpoint = fetchRecords()[1] != 99999;
-    checkpoint = true;
-    player = checkpoint ? this.physics.add.sprite(5750, 800, 'hero') : this.physics.add.sprite(175, 700, 'hero');
+    player = this.physics.add.sprite(5750, 700, 'hero');
     // налаштування гравця
     player.setScale(3);
     player.setCollideWorldBounds(true);
@@ -100,11 +86,6 @@ function create() {
 
     // хліб
     bread = this.physics.add.group();
-    createBread(480, 720);
-    createBread(1150, 620);
-    createBread(1400, 500);
-    createLotOfBread(3000, 950, 50, 0, 12);
-    createLotOfBread(5000, 200, 20, 50, 12);
 
     // scoreText = this.add.text(16, 16, 'Очок: 0', { fontSize: '32px', fill: '#000' }); // додати текст до текстової змінної очків, задати його локацію
     updateScore();
@@ -116,14 +97,6 @@ function create() {
     // вороги
     enemies = this.physics.add.group();
     this.physics.add.collider(enemies, platforms);
-    createEnemy(275, 800);
-    createEnemy(1100, 550);
-    createEnemy(1500, 900);
-    createEnemy(2300, 900);
-    createEnemy(2400, 900);
-    createEnemy(2500, 900);
-    createEnemy(2600, 900);
-    createEnemy(2700, 900);
 
     this.physics.add.collider(player, enemies, hitEnemy, null, this);
 
@@ -136,16 +109,10 @@ function create() {
     // трактори
     tractors = this.physics.add.group();
     this.physics.add.collider(player, tractors, collectTractor, null, this);
-    createTractor(750, 600);
-    createTractor(1770, 790);
-    createTractor(2900, 950);
 
     // додати флаг
-    flag = this.physics.add.sprite(5500, 560, 'flag').setOrigin(0, 0).setScale(1, 10); // розтягнути вертикально у 10 разів
-    // якщо чекпойнт, то флаг неактивний
-    if (!checkpoint) {
-        this.physics.add.overlap(player, flag, hitFlag, null, this);
-    }
+    flag = this.physics.add.sprite(15500, 1000, 'flag').setOrigin(0, 1);
+    this.physics.add.overlap(player, flag, hitFlag, null, this);
 
     // таймер
     const timerFunction = setInterval(function () {
@@ -194,6 +161,41 @@ function createGround(start, y, count, holes) {
     }); */
 }
 
+function createOldObjects() {
+    // не використовується
+    createGround(0, 1034, 75, new Array(4, 5, 6, 10, 11, 12, 25, 26, 27, 28, 29, 36, 37, 38, 39, 40, 41, 42, 43, 44)); // земля
+    createGround(4, 920, 3, new Array());
+    createGround(9, 800, 3, new Array());
+    createGround(14, 665, 11, new Array(17, 18, 19, 20, 21));
+    createGround(27, 900, 1, new Array());
+    createGround(34, 850, 5, new Array(33));
+    // elevator start
+    createGround(77, 950, 4, new Array());
+    createGround(82, 800, 4, new Array());
+    createGround(87, 650, 4, new Array());
+    createGround(92, 500, 5, new Array(93));
+    createGround(97, 350, 5, new Array());
+
+    createTractor(750, 600);
+    createTractor(1770, 790);
+    createTractor(2900, 950);
+
+    createEnemy(275, 800);
+    createEnemy(1100, 550);
+    createEnemy(1500, 900);
+    createEnemy(2300, 900);
+    createEnemy(2400, 900);
+    createEnemy(2500, 900);
+    createEnemy(2600, 900);
+    createEnemy(2700, 900);
+
+    createBread(480, 720);
+    createBread(1150, 620);
+    createBread(1400, 500);
+    createLotOfBread(3000, 950, 50, 0, 12);
+    createLotOfBread(5000, 200, 20, 50, 12);
+}
+
 function createGroundAuto() {
     // починаючи з x = 6000, створювати землю автоматично
     for (var x = startAuto; x < worldWidth; x += 48) {
@@ -203,6 +205,7 @@ function createGroundAuto() {
 
 function createPlatformsAuto() {
     YLines.forEach(y => { // для кожного можливого значення Y платформи
+        if (y == 1000) {return;} // не створювати на y=1000, бо там вже є земля
         for (var x = startAuto; x < worldWidth; x += 48) {
             if (Math.random() < platformProbability) { // згенерувати число від 0 до 1, якщо воно менше ймовірності, створити платформу
                 let length = 1 + getRandomInt(3) + getRandomInt(8); // випадково обрати довжину платформи
@@ -236,7 +239,7 @@ function createElementAuto(probability, offset, creator) {
 function createDecorations() {
     for (var x = startAuto; x < worldWidth; x += 800) {
         xRandom = getRandomInt(700); // зміщення по x
-        scale = Phaser.Math.Between(0.7, 1.3); // випадковий розмір
+        scale = Phaser.Math.Between(0.6, 1.1); // випадковий розмір
         index = getRandomInt(decor.length); // обрати випадковий елемент з декорацій
         if (index == decor.length) {continue;} // або нічого не обирати
         type = decor[index]
@@ -245,12 +248,13 @@ function createDecorations() {
 }
 
 function hitFlag(player, flag) {
-    gameOver(true);
+    gameOver(true); // закінчити гру з позначкою "виграв"
 }
 
 function createBread(x, y) {
     bread.create(x, y, 'bread');
 }
+/*
 function createLotOfBread(x, y, stepX, stepY, count) {
     let a = x;
     let b = y;
@@ -260,7 +264,7 @@ function createLotOfBread(x, y, stepX, stepY, count) {
         b += stepY;
     }
 }
-
+*/
 function createEnemy(x, y) {
     enemies.create(x, y, 'enemy');
 }
@@ -372,11 +376,11 @@ function scroll(x) {
 
 function updateScore() {
     // scoreText.setText('Очок: ' + score);
-    document.getElementById("score").innerText = "Score: " + score;
+    document.getElementById("score").innerText = "Score: " + score; // відобразити кількість очок
 }
 
 function updateTime() {
-    document.getElementById("timer").innerText = "Timer: " + formatTimerText(timer);
+    document.getElementById("timer").innerText = "Timer: " + formatTimerText(timer); // відобразити час
 }
 function formatTimerText(time) {
     // розраховує мілісекунди * 100 (децисекунди), секунди й хвилини
@@ -414,9 +418,9 @@ function gameOver(win) {
         приклад повідомлення:
         Ви виграли!
         Набрано очок: 45 (минулий рекорд: 43).
-        Витрачено часу: 00:55.6 (рекорд: 00:49.4).
+        Витрачено часу: 01:55.6 (рекорд: 01:49.4).
         */
-        alert("Ви досягли чекпойнту!\nНабрано очок: " + score + " (" + record1 + ").\nВитрачено часу: " + formatTimerText(timer) + " (" + record2 + ").");
+        alert("Ви виграли!\nНабрано очок: " + score + " (" + record1 + ").\nВитрачено часу: " + formatTimerText(timer) + " (" + record2 + ").");
 
         // якщо хоча б один із рекордів побито, зберегти cookie
         if (score > highScore || timer < lowestTime) {
@@ -424,10 +428,7 @@ function gameOver(win) {
             saveResultAsCookie(score > highScore ? score : highScore, timer < lowestTime ? timer : lowestTime);
         }
 
-        // перемістити гравця до фактичної локації чекпойнту
-        player.x = 5750;
-        player.y = 800;
-        stopGame = false;
+        location.reload();
     }
     else {
         alert("Гру завершено. Набрано очок: " + score + ".");
