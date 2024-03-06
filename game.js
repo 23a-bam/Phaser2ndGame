@@ -24,26 +24,30 @@ var scoreText; // текстова змінна для очків
 var timer = -1; // *100 мс
 // var lives = 3;
 // var livesText;
-var immunity = 0;
-const velocity = 120; // базова 
+var immunity = 0; // *10 мс
+const velocity = 120; // базова горизонтальна швидкість
 var velocityMultiplier = 1;
-var xTravelled = 0;
-var stopGame = false;
+// var xTravelled = 0;
+var stopGame = false; // для того, щоб функція GameOver не викликалася двічі
 
-var startAuto = 6000; // x, після якого почнеться автоматична генерація
-var worldWidth = 15600; // всього ширина
+var startAuto = 250; // x, після якого почнеться автоматична генерація
+var worldWidth = config.width * 5; // ширина в екранах
+
+var tractorBonus = 0; // строк дії трактора (*10 мс)
 
 const YLines = [250, 400, 550, 700, 850, 1000]; // можливі значення y для платформ та об'єктів
 const breadYOffset = -20;
 const tractorYOffset = -24;
 const enemyYOffset = -50;
+// імовірності для різних об'єктів
 const platformProbability = 0.1;
 const breadProbability = 0.02;
-const tractorProbability = 0.01;
+const tractorProbability = 0.005;
 const enemyProbability = 0.013;
-const decor = ['bush', 'tree', 'mushroom'];
+const decor = ['bush', 'tree', 'mushroom']; // можливі декорації
 
 function preload() {
+    // завантажити асети в гру
     this.load.image('sky', "assets/sky.png");
     this.load.image('tile', "assets/tile.png");
     this.load.image('bread', "assets/bread.png");
@@ -58,24 +62,24 @@ function preload() {
 
 function create() {
     // додає небо, починаючи з точки (0, 0)
-    this.add.image(0, 0, 'sky').setOrigin(0, 0).setDisplaySize(worldWidth, 1080); // setDisplaySize розтягує
+    this.add.image(0, 0, 'sky')
+        .setOrigin(0, 0)
+        .setDisplaySize(worldWidth, 1080)
+        .setDepth(0); // setDisplaySize розтягує
 
     // для камери
     // this.add.tileSprite(0, 0, worldWidth, 1080, "sky").setDisplaySize(1920, 1080).setOrigin(0, 0);
 
     platforms = this.physics.add.group();
-    createGround(108, 800, 15, new Array());
-
-    // декорації (на задньому плані)
-    decorations = this.physics.add.group();
-    createDecorations();
+    createGround(1, 800, 5, new Array()); // початкова платформа
 
     // гравець
     // створює гравця на старті або на чекпойнті залежно від збереженого результату
     // checkpoint = fetchRecords()[1] != 99999;
-    player = this.physics.add.sprite(5750, 700, 'hero');
+    player = this.physics.add.sprite(100, 700, 'hero');
     // налаштування гравця
     player.setScale(3);
+    player.setDepth(5);
     player.setCollideWorldBounds(true);
     this.physics.add.collider(player, platforms);
     // гравітація для гравця
@@ -97,21 +101,22 @@ function create() {
     // вороги
     enemies = this.physics.add.group();
     this.physics.add.collider(enemies, platforms);
-
-    this.physics.add.collider(player, enemies, hitEnemy, null, this);
-
-    // зменшувати імунітет
-    const immunityFunction = setInterval(function () {
-        if (immunity == 0) { return; }
-        immunity--;
-    }, 10);
+    this.physics.add.collider(player, enemies, hitEnemy, null, this); // зіткнення ворога з платформами
 
     // трактори
     tractors = this.physics.add.group();
     this.physics.add.collider(player, tractors, collectTractor, null, this);
 
+    // зменшувати імунітет
+    const immunityAndTractorFunction = setInterval(function () {
+        if (immunity <= 0 && tractorBonus <= 0) { return; }
+        immunity--;
+        tractorBonus--;
+    }, 10);
+
     // додати флаг
-    flag = this.physics.add.sprite(15500, 1000, 'flag').setOrigin(0, 1);
+    flag = this.physics.add.sprite(9500, 1000, 'flag')
+        .setOrigin(0, 1);
     this.physics.add.overlap(player, flag, hitFlag, null, this);
 
     // таймер
@@ -140,9 +145,9 @@ function create() {
     // слідкування камери за гравцем
     this.cameras.main.startFollow(player);
 
-    player.body.setGravityY(350);
-
-    createDecorations(); // додати ще раз на передньому плані
+    // декорації
+    decorations = this.physics.add.group();
+    createDecorations();
 }
 
 // start - стартова позиція по x * 48
@@ -162,7 +167,7 @@ function createGround(start, y, count, holes) {
 }
 
 function createOldObjects() {
-    // не використовується
+    // НЕ ВИКОРИСТОВУЄТЬСЯ
     createGround(0, 1034, 75, new Array(4, 5, 6, 10, 11, 12, 25, 26, 27, 28, 29, 36, 37, 38, 39, 40, 41, 42, 43, 44)); // земля
     createGround(4, 920, 3, new Array());
     createGround(9, 800, 3, new Array());
@@ -197,7 +202,7 @@ function createOldObjects() {
 }
 
 function createGroundAuto() {
-    // починаючи з x = 6000, створювати землю автоматично
+    // пстворювати землю автоматично
     for (var x = startAuto; x < worldWidth; x += 48) {
         platforms.create(x, 1000, 'tile').setOrigin(0, 0).refreshBody();
     }
@@ -209,14 +214,17 @@ function createPlatformsAuto() {
         for (var x = startAuto; x < worldWidth; x += 48) {
             if (Math.random() < platformProbability) { // згенерувати число від 0 до 1, якщо воно менше ймовірності, створити платформу
                 let length = 1 + getRandomInt(3) + getRandomInt(8); // випадково обрати довжину платформи
-                for (var a = 0; a < length; a++) {
-                    platforms.create(x, y, 'tile').setOrigin(0, 0).refreshBody(); // створити платформу
+                for (var a = 0; a < length; a++) { // стільки разів створити платформу
+                    platforms.create(x, y, 'tile')
+                        .setOrigin(0, 0)
+                        .refreshBody();
                     x += 48;
                 }
                 x += 115; // зробити відступ (буде ще +48)
             }
         }
     });
+    // налаштувати всі платформи
     platforms.children.iterate(function (child) {
         child.setImmovable(true);
         child.body.setAllowGravity(false);
@@ -228,22 +236,25 @@ function getRandomInt(max) {
 
 function createElementAuto(probability, offset, creator) {
     YLines.forEach(y => {
-        for (var x = startAuto; x < worldWidth; x += 50) { // значення не кратні 48 обрані для нелінійності
+        for (var x = startAuto; x < worldWidth; x += 54) { // значення не кратні 48 обрані для нелінійності
             if (Math.random() < probability) {
-                creator(x, y + offset);
+                creator(x, y + offset, Phaser.Math.Between(1, 10));
             }
         }
     });
 }
 
 function createDecorations() {
-    for (var x = startAuto; x < worldWidth; x += 800) {
-        xRandom = getRandomInt(700); // зміщення по x
+    for (var x = startAuto; x < worldWidth; x += 400) { // кожні 400 пікселів по x
+        xRandom = Phaser.Math.Between(0, 300); // зміщення по x
         scale = Phaser.Math.Between(0.6, 1.1); // випадковий розмір
         index = getRandomInt(decor.length); // обрати випадковий елемент з декорацій
         if (index == decor.length) {continue;} // або нічого не обирати
         type = decor[index]
-        decorations.create(x + xRandom, 1000, type).setOrigin(0, 1).setScale(scale); // створити відповідну декорацію
+        decorations.create(x + xRandom, 1000, type) // створити відповідну декорацію
+            .setOrigin(0, 1)
+            .setScale(scale)
+            .setDepth(Phaser.Math.Between(1, 10));
     }
 }
 
@@ -251,8 +262,8 @@ function hitFlag(player, flag) {
     gameOver(true); // закінчити гру з позначкою "виграв"
 }
 
-function createBread(x, y) {
-    bread.create(x, y, 'bread');
+function createBread(x, y, depth) {
+    bread.create(x, y, 'bread').setDepth(depth);
 }
 /*
 function createLotOfBread(x, y, stepX, stepY, count) {
@@ -265,12 +276,12 @@ function createLotOfBread(x, y, stepX, stepY, count) {
     }
 }
 */
-function createEnemy(x, y) {
-    enemies.create(x, y, 'enemy');
+function createEnemy(x, y, depth) {
+    enemies.create(x, y, 'enemy').setDepth(depth);
 }
 
-function createTractor(x, y) {
-    tractors.create(x, y, 'tractor').setScale(2);
+function createTractor(x, y, depth) {
+    tractors.create(x, y, 'tractor').setScale(2).setDepth(depth);
 }
 
 function collectBread(player, bread) {
@@ -281,15 +292,12 @@ function collectBread(player, bread) {
 
 function collectTractor(player, tractor) {
     tractor.destroy();
-    velocityMultiplier = 1.75; // збільшити швидкість у 1.75 разів
-    player.setTint(0xffcc00); // поставити гравця зеленим
-    immunity = 600; // додати імунітет на 6 секунд
+    if (immunity > 0) {immunity += 200;} // додати 2 секунди імунітету, якщо він вже є
+    else {immunity = 400;} // додати імунітет на 4 секунди
+    if (tractorBonus > 0) {tractorBonus += 200;} // аналогічно з бонусом трактора, що відповідає за швидкість і колір гравця
+    else {tractorBonus = 400;}
     score += 2;
     updateScore();
-    const tractorFunction = setInterval(function () { // скинути швидкість і колір через 6 секунд
-        velocityMultiplier = 1;
-        player.setTint(0xffffff);
-    }, 6000);
 }
 
 function hitEnemy(player, enemy) {
@@ -351,6 +359,15 @@ function update() {
     */
     if (player.y > 1000) { // герой впав
         gameOver(false);
+    }
+    // бонус трактора
+    if (tractorBonus > 0) {
+        velocityMultiplier = 1.75; // збільшити швидкість у 1.75 разів
+        player.setTint(0xffcc00); // поставити гравця зеленим
+    }
+    else {
+        velocityMultiplier = 1;
+        player.setTint(0xffffff);
     }
 }
 
