@@ -22,8 +22,8 @@ var game = new Phaser.Game(config);
 var score = 0; // кількість очків
 var scoreText; // текстова змінна для очків
 var timer = -1; // *100 мс
-// var lives = 3;
-// var livesText;
+var lives = 2;
+var livesText;
 var immunity = 0; // *10 мс
 const velocity = 120; // базова горизонтальна швидкість
 var velocityMultiplier = 1;
@@ -39,11 +39,14 @@ const YLines = [250, 400, 550, 700, 850, 1000]; // можливі значенн
 const breadYOffset = -20;
 const tractorYOffset = -24;
 const enemyYOffset = -50;
+const heartYOffset = -24;
+
 // імовірності для різних об'єктів
 const platformProbability = 0.1;
 const breadProbability = 0.02;
 const tractorProbability = 0.005;
-const enemyProbability = 0.013;
+const enemyProbability = 0.02;
+const heartProbability = 0.007;
 const decor = ['bush', 'tree', 'mushroom']; // можливі декорації
 
 function preload() {
@@ -54,6 +57,7 @@ function preload() {
     this.load.image('hero', "assets/grandpa.png");
     this.load.image('enemy', "assets/enemy.png");
     this.load.image('tractor', "assets/tractor.png");
+    this.load.image('heart', "assets/heart.png");
     this.load.image('flag', "assets/flag.png");
     this.load.image('bush', "assets/bush.png");
     this.load.image('tree', "assets/tree.png");
@@ -88,13 +92,13 @@ function create() {
     // реєструє стрілки вліво, вправо, вгору, вниз
     cursors = this.input.keyboard.createCursorKeys();
 
-    // хліб
-    bread = this.physics.add.group();
-
     // scoreText = this.add.text(16, 16, 'Очок: 0', { fontSize: '32px', fill: '#000' }); // додати текст до текстової змінної очків, задати його локацію
     updateScore();
-    // livesText = this.add.text(250, 16, 'Життів: 3', { fontSize: '32px', fill: '#000' });
+    // livesText = this.add.text(250, 16, 'Життів: 2', { fontSize: '32px', fill: '#000' });
+    updateLives();
 
+    // хліб
+    bread = this.physics.add.group();
     // колайдер для хліба
     this.physics.add.overlap(player, bread, collectBread, null, this);
 
@@ -106,6 +110,10 @@ function create() {
     // трактори
     tractors = this.physics.add.group();
     this.physics.add.collider(player, tractors, collectTractor, null, this);
+
+    // об'єкт життя
+    hearts = this.physics.add.group();
+    this.physics.add.overlap(player, hearts, collectHeart, null, this);
 
     // зменшувати імунітет
     const immunityAndTractorFunction = setInterval(function () {
@@ -132,6 +140,7 @@ function create() {
     createElementAuto(enemyProbability, enemyYOffset, createEnemy);
     createElementAuto(breadProbability, breadYOffset, createBread);
     createElementAuto(tractorProbability, tractorYOffset, createTractor);
+    createElementAuto(heartProbability, heartYOffset, createHeart)
 
     // налаштування ворогів
     enemies.children.iterate(function (child) {
@@ -152,7 +161,7 @@ function create() {
 
 // start - стартова позиція по x * 48
 // count - кількість платформ
-// holes - масив значень x*48, де треба дірки
+// holes - масив значень x*48, де треба "дірки"
 function createGround(start, y, count, holes) {
     for (let i = start; i < start + count; i++) {
         if (holes === null || !holes.includes(i)) { // якщо не задана діра
@@ -166,6 +175,7 @@ function createGround(start, y, count, holes) {
     }); */
 }
 
+/*
 function createOldObjects() {
     // НЕ ВИКОРИСТОВУЄТЬСЯ
     createGround(0, 1034, 75, new Array(4, 5, 6, 10, 11, 12, 25, 26, 27, 28, 29, 36, 37, 38, 39, 40, 41, 42, 43, 44)); // земля
@@ -200,6 +210,7 @@ function createOldObjects() {
     createLotOfBread(3000, 950, 50, 0, 12);
     createLotOfBread(5000, 200, 20, 50, 12);
 }
+*/
 
 function createGroundAuto() {
     // пстворювати землю автоматично
@@ -234,7 +245,7 @@ function getRandomInt(max) {
     return Phaser.Math.Between(0, max);
 }
 
-function createElementAuto(probability, offset, creator) {
+function createElementAuto(probability, offset, creator) { // автоматично створювати деякий елемент
     YLines.forEach(y => {
         for (var x = startAuto; x < worldWidth; x += 54) { // значення не кратні 48 обрані для нелінійності
             if (Math.random() < probability) {
@@ -284,6 +295,18 @@ function createTractor(x, y, depth) {
     tractors.create(x, y, 'tractor').setScale(2).setDepth(depth);
 }
 
+function createHeart(x, y, depth) {
+    hearts.create(x, y - getRandomInt(25), 'heart').setDepth(depth);
+}
+
+function collectHeart(player, heart) {
+    heart.destroy();
+    lives++;
+    score += 3;
+    updateLives();
+    updateScore();
+}
+
 function collectBread(player, bread) {
     bread.destroy(); // видалити хліб з гри
     score += 1;
@@ -321,12 +344,13 @@ function hitEnemy(player, enemy) {
             player.x += player.x - enemy.x + 5;
             player.setVelocityX(120);
         }
-        // lives--;
-        // enemy.disableBody(true, true);
+        lives--;
+        updateLives();
+        enemy.disableBody(true, true);
         // livesText.setText('Життів: ' + lives);
-        // if (lives == 0) {
-        gameOver(false);
-        // }
+        if (lives == 0) {
+            gameOver(false);
+        }
         // immunity = 40; // *10 мс
     }
 }
@@ -393,11 +417,13 @@ function scroll(x) {
 
 function updateScore() {
     // scoreText.setText('Очок: ' + score);
-    document.getElementById("score").innerText = "Score: " + score; // відобразити кількість очок
+    document.getElementById("score").innerText = "Очок: " + score; // відобразити кількість очок
 }
-
+function updateLives() {
+    document.getElementById("lives").innerText = "Життів: " + lives;
+}
 function updateTime() {
-    document.getElementById("timer").innerText = "Timer: " + formatTimerText(timer); // відобразити час
+    document.getElementById("timer").innerText = "Час: " + formatTimerText(timer); // відобразити час
 }
 function formatTimerText(time) {
     // розраховує мілісекунди * 100 (децисекунди), секунди й хвилини

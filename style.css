@@ -11,15 +11,17 @@ body {
     position: absolute;
     margin: 0;
 }
-#score {
+#score, #timer, #lives {
     position: fixed;
-    top: 10px;
     left: 10px;
     font: 200% Consolas;
 }
+#score {
+    top: 10px;
+}
 #timer {
-    position: fixed;
     top: 60px;
-    left: 10px;
-    font: 200% Consolas;
+}
+#lives {
+    top: 110px;
 }
