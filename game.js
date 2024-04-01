@@ -372,7 +372,7 @@ function update() {
         // player.flipX = false;
     }
 
-    if (cursors.up.isDown && player.body.touching.down) {
+    if (cursors.up.isDown && player.body.onFloor()) {
         // стрибнути, якщо натиснута стрілка вгору і гравець торкається землі
         player.setVelocityY(-340);
     }
