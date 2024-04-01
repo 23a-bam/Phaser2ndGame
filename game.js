@@ -62,6 +62,7 @@ function preload() {
     this.load.image('bush', "assets/bush.png");
     this.load.image('tree', "assets/tree.png");
     this.load.image('mushroom', "assets/mushroom.png");
+    this.load.image('bullet', "assets/bullet.png");
 }
 
 function create() {
@@ -91,6 +92,8 @@ function create() {
 
     // реєструє стрілки вліво, вправо, вгору, вниз
     cursors = this.input.keyboard.createCursorKeys();
+    // реєструє клавішу X для пострілу: натискання клавіші Х виконує дію fireBullet
+    this.input.keyboard.on('keydown-X', fireBullet);
 
     // scoreText = this.add.text(16, 16, 'Очок: 0', { fontSize: '32px', fill: '#000' }); // додати текст до текстової змінної очків, задати його локацію
     updateScore();
@@ -157,6 +160,16 @@ function create() {
     // декорації
     decorations = this.physics.add.group();
     createDecorations();
+
+    // постріл
+    bullet = this.physics.add.sprite(0, 0, 'bullet')
+    bullet.visible = false;
+    bullet.body.setGravityY(70);
+    this.physics.add.collider(bullet, bread, shootObject);
+    this.physics.add.collider(bullet, hearts, shootObject);
+    this.physics.add.collider(bullet, tractors, shootObject);
+    this.physics.add.collider(bullet, enemies, shootEnemy);
+    this.physics.add.collider(bullet, platforms, shootPlatform);
 }
 
 // start - стартова позиція по x * 48
@@ -326,9 +339,7 @@ function collectTractor(player, tractor) {
 function hitEnemy(player, enemy) {
     // якщо зверху, вбити ворога
     if (player.y < enemy.y - 80) {
-        enemy.destroy();
-        score += 2;
-        updateScore();
+        killEnemy(enemy);
         player.setVelocityY(-100);
     }
     else {
@@ -353,6 +364,15 @@ function hitEnemy(player, enemy) {
         }
         // immunity = 40; // *10 мс
     }
+}
+function shootEnemy(bullet, enemy) {
+    resetBullet(bullet);
+    killEnemy(enemy);
+}
+function killEnemy(enemy) {
+    enemy.destroy();
+    score += 2;
+    updateScore();
 }
 
 function update() {
@@ -484,4 +504,34 @@ function saveResultAsCookie(score, time) {
     str = score + " " + time; // сам контент cookie
     // зберегти cookie
     document.cookie = "data=" + str + "; expires=Thu, 12 Feb 2026 12:00:00 UTC";
+}
+
+function fireBullet() { // при натисканні клавіші X
+    if (bullet.visible) {return;} // не стріляти, якщо патрон на екрані
+
+    if (player.flipX) { // якщо гравець дивиться вліво
+        bullet.setPosition(player.x - 50, player.y);
+        bullet.setVelocity(-800, 5); // 800 швидкості вправо, 5 вниз (щоб патрон не летів нескінченно)
+        bullet.setGravityX(50); // опір повітря
+    }
+    else {
+        bullet.setPosition(player.x + 50, player.y);
+        bullet.setVelocity(800, 10); // 800 швидкості вправо, 5 вниз (щоб патрон не летів нескінченно)
+        bullet.setGravityX(-50);
+    }
+    bullet.visible = true; // показати патрон на екрані
+}
+function shootObject(bullet, object) {
+    object.destroy(); // знищити об'єкт, в який влучив постріл
+    resetBullet(bullet);
+}
+function shootPlatform(bullet, platform) {
+    // попав у платформу
+    resetBullet(bullet);
+}
+function resetBullet(bullet) {
+    // перемістити патрон за екран, зупинити і сховати
+    bullet.setVelocity(0, 0);
+    bullet.setPosition(0, 0);
+    bullet.visible = false;
 }
