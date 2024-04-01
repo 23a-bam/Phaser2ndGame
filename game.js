@@ -24,16 +24,17 @@ var scoreText; // текстова змінна для очків
 var timer = -1; // *100 мс
 var lives = 2;
 var livesText;
+
 var immunity = 0; // *10 мс
+var tractorBonus = 0; // строк дії трактора (*10 мс)
+
 const velocity = 120; // базова горизонтальна швидкість
 var velocityMultiplier = 1;
-// var xTravelled = 0;
+
 var stopGame = false; // для того, щоб функція GameOver не викликалася двічі
 
 var startAuto = 250; // x, після якого почнеться автоматична генерація
 var worldWidth = config.width * 5; // ширина в екранах
-
-var tractorBonus = 0; // строк дії трактора (*10 мс)
 
 const YLines = [250, 400, 550, 700, 850, 1000]; // можливі значення y для платформ та об'єктів
 const breadYOffset = -20;
@@ -47,6 +48,7 @@ const breadProbability = 0.02;
 const tractorProbability = 0.005;
 const enemyProbability = 0.02;
 const heartProbability = 0.007;
+
 const decor = ['bush', 'tree', 'mushroom']; // можливі декорації
 
 function preload() {
@@ -181,49 +183,7 @@ function createGround(start, y, count, holes) {
             platforms.create(i * 48, y, 'tile').setImmovable(true);
         }
     }
-    /* вимкнути гравітацію (уже в createPlatformsAuto)
-    platforms.children.iterate(function (child) {
-        child.setImmovable(true);
-        child.body.setAllowGravity(false);
-    }); */
 }
-
-/*
-function createOldObjects() {
-    // НЕ ВИКОРИСТОВУЄТЬСЯ
-    createGround(0, 1034, 75, new Array(4, 5, 6, 10, 11, 12, 25, 26, 27, 28, 29, 36, 37, 38, 39, 40, 41, 42, 43, 44)); // земля
-    createGround(4, 920, 3, new Array());
-    createGround(9, 800, 3, new Array());
-    createGround(14, 665, 11, new Array(17, 18, 19, 20, 21));
-    createGround(27, 900, 1, new Array());
-    createGround(34, 850, 5, new Array(33));
-    // elevator start
-    createGround(77, 950, 4, new Array());
-    createGround(82, 800, 4, new Array());
-    createGround(87, 650, 4, new Array());
-    createGround(92, 500, 5, new Array(93));
-    createGround(97, 350, 5, new Array());
-
-    createTractor(750, 600);
-    createTractor(1770, 790);
-    createTractor(2900, 950);
-
-    createEnemy(275, 800);
-    createEnemy(1100, 550);
-    createEnemy(1500, 900);
-    createEnemy(2300, 900);
-    createEnemy(2400, 900);
-    createEnemy(2500, 900);
-    createEnemy(2600, 900);
-    createEnemy(2700, 900);
-
-    createBread(480, 720);
-    createBread(1150, 620);
-    createBread(1400, 500);
-    createLotOfBread(3000, 950, 50, 0, 12);
-    createLotOfBread(5000, 200, 20, 50, 12);
-}
-*/
 
 function createGroundAuto() {
     // пстворювати землю автоматично
@@ -289,17 +249,7 @@ function hitFlag(player, flag) {
 function createBread(x, y, depth) {
     bread.create(x, y, 'bread').setDepth(depth);
 }
-/*
-function createLotOfBread(x, y, stepX, stepY, count) {
-    let a = x;
-    let b = y;
-    for (let i = 0; i < count; i++) {
-        createBread(a, b);
-        a += stepX;
-        b += stepY;
-    }
-}
-*/
+
 function createEnemy(x, y, depth) {
     enemies.create(x, y, 'enemy').setDepth(depth);
 }
@@ -343,7 +293,7 @@ function hitEnemy(player, enemy) {
         player.setVelocityY(-100);
     }
     else {
-        // якщо імунітет, не зважати
+        // якщо імунітет (від трактора), не зважати
         if (immunity > 0) {
             return;
         }
@@ -362,7 +312,6 @@ function hitEnemy(player, enemy) {
         if (lives == 0) {
             gameOver(false);
         }
-        // immunity = 40; // *10 мс
     }
 }
 function shootEnemy(bullet, enemy) {
@@ -396,11 +345,6 @@ function update() {
         // стрибнути, якщо натиснута стрілка вгору і гравець торкається землі
         player.setVelocityY(-340);
     }
-    /*
-    if (player.x > 600) { // скроллінг
-        scroll(2 + (player.x - 600) / 150.0 ); // адаптивний скроллінг у залежності від x
-    }
-    */
     if (player.y > 1000) { // герой впав
         gameOver(false);
     }
@@ -409,31 +353,11 @@ function update() {
         velocityMultiplier = 1.75; // збільшити швидкість у 1.75 разів
         player.setTint(0xffcc00); // поставити гравця зеленим
     }
-    else {
+    else { // скинути бонус трактора
         velocityMultiplier = 1;
         player.setTint(0xffffff);
     }
 }
-
-/*
-function scroll(x) {
-    player.x -= x;
-    flag.x -= x;
-    platforms.children.iterate(function (child) {
-        child.x -= x;
-    });
-    bread.children.iterate(function (child) {
-        child.x -= x;
-    });
-    enemies.children.iterate(function (child) {
-        child.x -= x;
-    });
-    tractors.children.iterate(function (child) {
-        child.x -= x;
-    });
-    xTravelled += x;
-}
-*/
 
 function updateScore() {
     // scoreText.setText('Очок: ' + score);
