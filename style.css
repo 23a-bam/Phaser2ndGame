@@ -11,7 +11,7 @@ body {
     position: absolute;
     margin: 0;
 }
-#score, #timer, #lives {
+#score, #timer, #lives, #enemyCount {
     position: fixed;
     left: 10px;
     font: 200% Consolas;
@@ -24,6 +24,9 @@ body {
 }
 #lives {
     top: 110px;
+}
+#enemyCount {
+    top: 160px;
 }
 #reset {
     position: fixed;

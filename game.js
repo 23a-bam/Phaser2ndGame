@@ -20,10 +20,9 @@ var config = {
 var game = new Phaser.Game(config);
 
 var score = 0; // кількість очків
-var scoreText; // текстова змінна для очків
 var timer = -1; // *100 мс
 var lives = 2;
-var livesText;
+var enemyCount = 0;
 
 var immunity = 0; // *10 мс
 var tractorBonus = 0; // строк дії трактора (*10 мс)
@@ -97,11 +96,6 @@ function create() {
     // реєструє клавішу X для пострілу: натискання клавіші Х виконує дію fireBullet
     this.input.keyboard.on('keydown-X', fireBullet);
 
-    // scoreText = this.add.text(16, 16, 'Очок: 0', { fontSize: '32px', fill: '#000' }); // додати текст до текстової змінної очків, задати його локацію
-    updateScore();
-    // livesText = this.add.text(250, 16, 'Життів: 2', { fontSize: '32px', fill: '#000' });
-    updateLives();
-
     // хліб
     bread = this.physics.add.group();
     // колайдер для хліба
@@ -111,6 +105,7 @@ function create() {
     enemies = this.physics.add.group();
     this.physics.add.collider(enemies, platforms);
     this.physics.add.collider(player, enemies, hitEnemy, null, this); // зіткнення ворога з платформами
+    this.physics.add.collider(enemies, enemies, enemyAdjacent);
 
     // трактори
     tractors = this.physics.add.group();
@@ -172,6 +167,10 @@ function create() {
     this.physics.add.collider(bullet, tractors, shootObject);
     this.physics.add.collider(bullet, enemies, shootEnemy);
     this.physics.add.collider(bullet, platforms, shootPlatform);
+
+    updateScore();
+    updateLives();
+    updateEnemyCount();
 }
 
 // start - стартова позиція по x * 48
@@ -251,6 +250,7 @@ function createBread(x, y, depth) {
 }
 
 function createEnemy(x, y, depth) {
+    enemyCount++;
     enemies.create(x, y, 'enemy').setDepth(depth);
 }
 
@@ -284,6 +284,11 @@ function collectTractor(player, tractor) {
     else {tractorBonus = 400;}
     score += 2;
     updateScore();
+}
+
+function enemyAdjacent(enemy1, enemy2) { // якщо два вороги поруч
+    rightEnemy = enemy1.x > enemy2.x ? enemy1 : enemy2; // визначити ворога з найбільшим значенням x
+    rightEnemy.x += 100; // посунути найправішого врага ще направо
 }
 
 function hitEnemy(player, enemy) {
@@ -320,8 +325,10 @@ function shootEnemy(bullet, enemy) {
 }
 function killEnemy(enemy) {
     enemy.destroy();
+    enemyCount--;
     score += 2;
     updateScore();
+    updateEnemyCount();
 }
 
 function update() {
@@ -379,6 +386,9 @@ function formatTimerText(time) {
     let mText = min < 10 ? "0" + min : "" + min;
     // відформатовує текст і повертає
     return mText + ":" + sText + "." + ms;
+}
+function updateEnemyCount() {
+    document.getElementById("enemyCount").innerText = "Москалів: " + enemyCount;
 }
 
 function fetchRecords() {
