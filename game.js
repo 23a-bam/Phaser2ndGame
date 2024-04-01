@@ -443,6 +443,7 @@ function fireBullet() { // при натисканні клавіші X
         bullet.setVelocity(800, 10); // 800 швидкості вправо, 5 вниз (щоб патрон не летів нескінченно)
         bullet.setGravityX(-50);
     }
+    bullet.flipX = player.flipX; // напрямок патрона такий самий, як напрямок погляду гравця
     bullet.visible = true; // показати патрон на екрані
 }
 function shootObject(bullet, object) {
