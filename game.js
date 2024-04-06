@@ -99,21 +99,21 @@ function create() {
     // хліб
     bread = this.physics.add.group();
     // колайдер для хліба
-    this.physics.add.overlap(player, bread, collectBread);
+    this.physics.add.overlap(player, bread, collectBread, null, this);
 
     // вороги
     enemies = this.physics.add.group();
     this.physics.add.collider(enemies, platforms);
-    this.physics.add.collider(player, enemies, hitEnemy); // зіткнення ворога з платформами
+    this.physics.add.collider(player, enemies, hitEnemy, null, this); // зіткнення ворога з платформами
     this.physics.add.collider(enemies, enemies, enemyAdjacent);
 
     // трактори
     tractors = this.physics.add.group();
-    this.physics.add.collider(player, tractors, collectTractor);
+    this.physics.add.collider(player, tractors, collectTractor, null, this);
 
     // об'єкт життя
     hearts = this.physics.add.group();
-    this.physics.add.overlap(player, hearts, collectHeart);
+    this.physics.add.overlap(player, hearts, collectHeart, null, this);
 
     // зменшувати імунітет
     const immunityAndTractorFunction = setInterval(function () {
@@ -125,7 +125,7 @@ function create() {
     // додати флаг
     flag = this.physics.add.sprite(9500, 1000, 'flag')
         .setOrigin(0, 1);
-    this.physics.add.overlap(player, flag, hitFlag);
+    this.physics.add.overlap(player, flag, hitFlag, null, this);
 
     // таймер
     const timerFunction = setInterval(function () {
@@ -171,8 +171,6 @@ function create() {
     updateScore();
     updateLives();
     updateEnemyCount();
-
-    alert("PHASER2NDGAME\nАвтор - Боровий Артур (2024)\n\nСтрілки - ходити\nX - постріл");
 }
 
 // start - стартова позиція по x * 48
